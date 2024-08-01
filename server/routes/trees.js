@@ -26,7 +26,7 @@ const db = new sqlite3.Database(process.env.DB_FILE, sqlite3.OPEN_READWRITE);
  *   - Ordered by the height_ft from tallest to shortest
  */
 // Your code here 
-router.get('/', (req, res) => {
+router.get('/', (req, res, next) => {
     const sql = 'SELECT id, tree FROM trees ORDER BY height_ft DESC'
     const params = [];
     db.all(sql, params, (err, rows) => {
@@ -50,7 +50,8 @@ router.get('/', (req, res) => {
 // Your code here 
 router.get('/:id', (req, res, next) => {
     const sql = 'SELECT * FROM trees WHERE id = ?';
-    const params = req.params.id;
+    const id = req.params.id;
+    const params = [id];
     
     db.get(sql, params, (err, row) => {
         if (err) {
@@ -140,11 +141,10 @@ router.put('/:id', (req, res, next) => {
     WHERE id = ?
     `
     const params = [id, name, location, height, size]
- 
+    
     if (id !== paramsId) {
-        return res.status(400).json({
-            "error": "IDs do not match"
-        })
+        const err = new Error('IDs do not match');
+        return next(err);
     }
 
     db.run(sql, params, (err) => {
